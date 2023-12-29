@@ -38,10 +38,10 @@ const Logout = props => {
   return (
     <DrawerContentScrollView {...props}>
       {/* Include default drawer items */}
-      <DrawerItemList {...props} />
+      <DrawerItemList {...props}/>
 
       {/* Add custom items or components */}
-      <DrawerItem label="Logout" onPress={handleLogout} />
+      <DrawerItem label="Logout" onPress={handleLogout} labelStyle={{color: '#fff'}}/>
     </DrawerContentScrollView>
   );
 };

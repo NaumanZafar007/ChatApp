@@ -4,4 +4,5 @@ export const ImagesPath = {
   UsersTab: require('../assets/Users-Icon.png'),
   Messages: require('../assets/Chat-Icon-1.png'),
   Messages2: require('../assets/Chats-Icon-2.png'),
+  SendButton: require('../assets/Send_Arrow.png'),
 };

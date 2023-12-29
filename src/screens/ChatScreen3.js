@@ -1,8 +1,20 @@
-import {View, Text} from 'react-native';
+import {View, Text, Image} from 'react-native';
 import React, {useEffect, useState, useCallback} from 'react';
-import {GiftedChat, Bubble, InputToolbar} from 'react-native-gifted-chat';
+import {GiftedChat, Bubble, InputToolbar, Send} from 'react-native-gifted-chat';
 import firestore from '@react-native-firebase/firestore';
-import { useFocusEffect } from '@react-navigation/native';
+import {useFocusEffect} from '@react-navigation/native';
+import { ImagesPath } from '../assets/ImagesPath';
+
+const CustomSendButton = props => {
+  return (
+    <Send {...props} containerStyle={{justifyContent: 'center', marginHorizontal: 5}}>
+      <Image
+        source={ImagesPath.SendButton}
+        style={{alignSelf: 'center',height: 30, width: 30}}
+      />
+    </Send>
+  );
+};
 
 const ChatScreen3 = ({route, navigation}) => {
   const [messages, setMessages] = useState([]);
@@ -34,7 +46,10 @@ const ChatScreen3 = ({route, navigation}) => {
   };
 
   useFocusEffect(() => {
-    navigation.setOptions({headerTitle: route.params.user.name});
+    navigation.setOptions({
+      headerTitle: route.params.user.name,
+      tabBarVisible: false,
+    });
     allMessages();
   });
 
@@ -64,14 +79,14 @@ const ChatScreen3 = ({route, navigation}) => {
   };
 
   return (
-    <View style={{flex: 1, backgroundColor: '#000', paddingBottom: 10}}>
+    <View style={{flex: 1, backgroundColor: '#000', paddingBottom: 20}}>
       <GiftedChat
         messages={messages}
         onSend={text => onSend(text)}
         user={{
           _id: currentUserid,
         }}
-        messagesContainerStyle={{paddingVertical: 5, marginLeft: 5}}
+        messagesContainerStyle={{paddingVertical: 5}}
         imageStyle={{margin: 5}}
         renderBubble={props => {
           return (
@@ -87,14 +102,22 @@ const ChatScreen3 = ({route, navigation}) => {
             />
           );
         }}
+        renderSend={props => <CustomSendButton {...props} />}
         renderInputToolbar={props => {
           return (
             <InputToolbar
               {...props}
               containerStyle={{
                 backgroundColor: 'white',
-                borderRadius: 25,
+                borderRadius: 20,
                 paddingHorizontal: 10,
+                paddingTop: 3,
+                width: '90%',
+                marginHorizontal: '5%'
+              }}
+              textInputStyle={{
+                fontSize: 15,
+                color: '#000',
               }}
             />
           );

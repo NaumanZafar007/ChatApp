@@ -46,7 +46,7 @@ const Users = ({navigation}) => {
         renderItem={({item}) => (
           <TouchableOpacity
             onPress={() =>
-              navigation.navigate('ChatScreen3', {
+              navigation.navigate('ChatScreen', {
                 user: {
                   name: item.name,
                   uid: item.uid,
@@ -65,11 +65,11 @@ const Users = ({navigation}) => {
           </TouchableOpacity>
         )}
       />
-      <TouchableOpacity
-        onPress={() => navigation.navigate('ChatsStack', { screen: 'ChatUsers' })}
+      {/* <TouchableOpacity
+        onPress={() => navigation.navigate('ChatsStack', { screen: 'ChatsHome' })}
         style={styles.logoutBtn}>
         <Text style={styles.loginText}>Back</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </SafeAreaView>
   );
 };
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     height: 'auto',
-    marginHorizontal: 28,
+    marginHorizontal: 26,
     marginVertical: 10,
     flexDirection: 'row',
   },
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   nameText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     fontFamily: 'Verdana',
     color: 'white',

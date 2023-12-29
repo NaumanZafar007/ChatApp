@@ -25,8 +25,25 @@ const Home = ({navigation}) => {
   useEffect(() => {
     checkUserToken();
     getMess();
+    //--------------------------------------------------
   }, []);
-  // Check User
+  useFocusEffect(() => {
+    getDocumentIdsFromCollectionGroup()
+      .then(async documentIds => {
+        const userID = await AsyncStorage.getItem('userUID');
+        setCurrentUserid(userID);
+        if(documentIds){
+          const sender = documentIds.map(item => item.sentBy);
+          const filterUser = sender.filter(item => item !== userID);
+          const uniqueValues = [...new Set(filterUser)];
+          setUniqueUsers(uniqueValues);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  });
+  // Check User Token
   const checkUserToken = async () => {
     try {
       const Token = await AsyncStorage.getItem('userToken');
@@ -43,9 +60,7 @@ const Home = ({navigation}) => {
   const getDocumentIdsFromCollectionGroup = async () => {
     try {
       const querySnapshot = await firestore().collectionGroup('thread').get();
-
       const documentIds = querySnapshot.docs.map(doc => doc.data());
-
       return documentIds;
     } catch (error) {
       console.error('Error fetching document IDs:', error.message);
@@ -53,12 +68,22 @@ const Home = ({navigation}) => {
     }
   };
 
+  useEffect(() => {
+    if (uniqueUsers.length != 0) {
+      getUsersByUIDs()
+        .then(users => {
+          setUsers(users);
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+    }
+  }, [uniqueUsers]);
+
   //Get Users data by ID
   const getUsersByUIDs = async () => {
     try {
       const usersCollection = firestore().collection('users');
-
-      // Use the "whereIn" query to filter documents based on UID array
       const querySnapshot2 = await usersCollection
         .where('uid', 'in', uniqueUsers)
         .get();
@@ -66,7 +91,6 @@ const Home = ({navigation}) => {
       const users = [];
 
       querySnapshot2.forEach(doc => {
-        // Access the user data using doc.data()
         const user = doc.data();
         users.push(user);
       });
@@ -78,86 +102,9 @@ const Home = ({navigation}) => {
     }
   };
   //----------------------------------------------------------------
-  useEffect(() => {
-    getDocumentIdsFromCollectionGroup()
-      .then(async documentIds => {
-        const userID = await AsyncStorage.getItem('userUID');
-        console.log('current use is: ' + userID);
-        setCurrentUserid(userID);
-        const u = documentIds.map(item => item.sentBy);
-        const v = u.filter(item => item !== currentUserid);
-        const uniqueValues = [...new Set(v)];
-        setUniqueUsers(uniqueValues);
-        const z = documentIds.map(item => item.text);
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
-    //----------------------------------------------------------------
+  //----------------------------------------------------------------
 
-    getUsersByUIDs()
-      .then(users => {
-        setUsers(users);
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
-  }, []);
-
-  const logout = async () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
-      {
-        text: 'Cancel',
-        style: 'cancel',
-      },
-      {
-        text: 'Logout',
-        onPress: async () => {
-          try {
-            // Perform Firebase logout
-            await auth().signOut();
-            navigation.navigate('AuthStack', {screen: 'Login'});
-            ToastAndroid.show('Successfully Signed Out', ToastAndroid.SHORT);
-            await AsyncStorage.removeItem('userToken');
-            await AsyncStorage.removeItem('userUID');
-          } catch (error) {
-            console.error('Error logging out:', error.message);
-          }
-        },
-      },
-    ]);
-  };
-
-  const getMess = async () => {
-    const getLastMessageFromCollectionGroup = async () => {
-      try {
-        const collectionGroup = firestore().collectionGroup('thread');
-    
-        const querySnapshot = await collectionGroup.orderBy('createdAt', 'desc').limit(1).get();
-        console.log("we are "+ querySnapshot)
-        if (!querySnapshot.empty) {
-          const lastMessage = querySnapshot.docs[0].data();
-          return lastMessage;
-        } else {
-          return null; // No messages found
-        }
-      } catch (error) {
-        console.error('Error fetching last message:', error.message);
-        throw error;
-      }
-    };
-    
-    try {
-      const lastMessage = await getLastMessageFromCollectionGroup();
-      if (lastMessage) {
-        console.log('Last Message:', lastMessage.text);
-      } else {
-        console.log('No messages found in the collection group.');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
+  const getMess = async () => {};
 
   return (
     <SafeAreaView style={styles.container}>
@@ -170,28 +117,27 @@ const Home = ({navigation}) => {
           <TouchableOpacity
             onPress={() =>
               navigation.navigate('ChatScreen', {
-                name: item.name,
-                uid: item.uid,
-                currentUserid: currentUserid,
+                user: {
+                  name: item.name,
+                  uid: item.uid,
+                  currentUserid: currentUserid,
+                },
               })
             }>
             <View style={styles.card}>
               <Image style={[styles.userImageST]} source={ImagesPath.Users} />
               <View style={styles.txtArea}>
                 <Text style={styles.nameText}>{item.name}</Text>
-                <Text style={styles.msgContent}>{item.email}</Text>
+                {/* <Text style={styles.msgContent}>{item}</Text> */}
               </View>
             </View>
           </TouchableOpacity>
         )}
       />
-      <TouchableOpacity
+      {/* <TouchableOpacity
         onPress={() => navigation.navigate('UsersStack', {screen: 'Users'})}
         style={styles.usersBtn}>
         <Text style={styles.usersText}>+</Text>
-      </TouchableOpacity>
-      {/* <TouchableOpacity onPress={() => logout()} style={styles.logoutBtn}>
-        <Text style={styles.loginText}>LOGOUT</Text>
       </TouchableOpacity> */}
     </SafeAreaView>
   );
@@ -238,7 +184,7 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     height: 'auto',
-    marginHorizontal: 24,
+    marginHorizontal: 26,
     marginVertical: 10,
     flexDirection: 'row',
   },
