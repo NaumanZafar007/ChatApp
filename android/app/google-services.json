@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "867107657047",
+    "project_id": "practice-task-1066a",
+    "storage_bucket": "practice-task-1066a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:867107657047:android:d151b85bdd5082f9f59a12",
+        "android_client_info": {
+          "package_name": "com.demoproj"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAAx04r_pY9TOg6kXo1nHyhPiQWebOsMcU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
