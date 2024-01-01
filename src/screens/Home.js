@@ -43,25 +43,26 @@ const Home = ({navigation}) => {
 
   useEffect(() => {
     // Create a reference to the collection of user documents
-    const usersCollectionRef = firestore().collection('messages');
-
+    const usersCollectionRef1 = firestore().collection('messages').where("senderId", "==", currentUserid);
+    const usersCollectionRef2 = firestore().collection('messages').where("receiverId", "==", currentUserid);
     // Subscribe to real-time updates on the user collection
-    const unsubscribe = usersCollectionRef.onSnapshot(querySnapshot => {
+    
+    const handleQuerySnapshot = (querySnapshot) => {
       if (!querySnapshot.empty) {
         const usersData = [];
 
         // Iterate through the user documents in the collection
         querySnapshot.forEach(userDoc => {
-          const userData = userDoc.data();
+          const userData = userDoc.data(); 
           // Check if the user ID is not the current user's ID
           const fsuser = auth().currentUser.uid;
           console.log('fsuser is ' + JSON.stringify(fsuser));
-          if (currentUserid == fsuser) {
+          if (currentUserid == fsuser) { 
             usersData.push({
-              userId: userData.lastMessage.user._id,
-              lastMessage: userData.lastMessage.text,
-              receiver: userData.lastMessage.user.sendto,
-              receiverName: userData.lastMessage.user.sendtoName,
+              userId: userData.senderId,
+              lastMessage: userData.lastMessage,
+              receiver: userData.receiverId,
+              receiverName: userData.receiverName,
             });
           }
         });
@@ -76,10 +77,12 @@ const Home = ({navigation}) => {
         // Handle the case where no user documents exist in the collection
         console.log('No user documents found.');
       }
-    });
+    };
+    const unsubscribe1 = usersCollectionRef1.onSnapshot(handleQuerySnapshot);
+    const unsubscribe2 = usersCollectionRef2.onSnapshot(handleQuerySnapshot)
     //console.log(' Yse ', userMessages);
-    return () => unsubscribe();
-  }, [currentUserid]);
+    return () => unsubscribe1(),unsubscribe2();
+  }, []);
 
   //----------------------------------------------------------------
 

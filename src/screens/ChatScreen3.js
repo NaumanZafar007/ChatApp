@@ -82,7 +82,7 @@ const ChatScreen3 = ({route, navigation}) => {
     firestore()
       .collection('messages')
       .doc(chatid)
-      .set({lastMessage: msg});
+      .set({lastMessage: msg.text, senderId: currentUserid,receiverId: uid, receiverName: name});
   };
 
   return (
@@ -92,8 +92,6 @@ const ChatScreen3 = ({route, navigation}) => {
         onSend={text => onSend(text)}
         user={{
           _id: currentUserid,
-          sendto: uid,
-          sendtoName: name
         }}
         messagesContainerStyle={{paddingVertical: 5}}
         imageStyle={{margin: 5}}
