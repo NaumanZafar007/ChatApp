@@ -18,36 +18,21 @@ import {ImagesPath} from '../assets/ImagesPath';
 
 const Home = ({navigation}) => {
   const [users, setUsers] = useState(null);
-  const [currentUserid, setCurrentUserid] = useState();
+  const [currentUserid, setCurrentUserid] = useState(null);
   const [oldMessages, setOldMessages] = useState();
   const [uniqueUsers, setUniqueUsers] = useState([]);
   //Auto Call Functions
   useEffect(() => {
     checkUserToken();
-    getMess();
     //--------------------------------------------------
   }, []);
-  useFocusEffect(() => {
-    getDocumentIdsFromCollectionGroup()
-      .then(async documentIds => {
-        const userID = await AsyncStorage.getItem('userUID');
-        setCurrentUserid(userID);
-        if(documentIds){
-          const sender = documentIds.map(item => item.sentBy);
-          const filterUser = sender.filter(item => item !== userID);
-          const uniqueValues = [...new Set(filterUser)];
-          setUniqueUsers(uniqueValues);
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
-  });
   // Check User Token
   const checkUserToken = async () => {
     try {
       const Token = await AsyncStorage.getItem('userToken');
       console.log('Available Token: ' + Token);
+      const current_User = await AsyncStorage.getItem('userUID');
+      setCurrentUserid(current_User);
       if (!Token) {
         navigation.navigate('AuthStack', {screen: 'Login'});
       }
@@ -56,55 +41,47 @@ const Home = ({navigation}) => {
     }
   };
 
-  //Get recent users id
-  const getDocumentIdsFromCollectionGroup = async () => {
-    try {
-      const querySnapshot = await firestore().collectionGroup('thread').get();
-      const documentIds = querySnapshot.docs.map(doc => doc.data());
-      return documentIds;
-    } catch (error) {
-      console.error('Error fetching document IDs:', error.message);
-      throw error;
-    }
-  };
-
   useEffect(() => {
-    if (uniqueUsers.length != 0) {
-      getUsersByUIDs()
-        .then(users => {
-          setUsers(users);
-        })
-        .catch(error => {
-          console.error('Error:', error);
+    // Create a reference to the collection of user documents
+    const usersCollectionRef = firestore().collection('messages');
+
+    // Subscribe to real-time updates on the user collection
+    const unsubscribe = usersCollectionRef.onSnapshot(querySnapshot => {
+      if (!querySnapshot.empty) {
+        const usersData = [];
+
+        // Iterate through the user documents in the collection
+        querySnapshot.forEach(userDoc => {
+          const userData = userDoc.data();
+          // Check if the user ID is not the current user's ID
+          const fsuser = auth().currentUser.uid;
+          console.log('fsuser is ' + JSON.stringify(fsuser));
+          if (currentUserid == fsuser) {
+            usersData.push({
+              userId: userData.lastMessage.user._id,
+              lastMessage: userData.lastMessage.text,
+              receiver: userData.lastMessage.user.sendto,
+              receiverName: userData.lastMessage.user.sendtoName,
+            });
+          }
         });
-    }
-  }, [uniqueUsers]);
 
-  //Get Users data by ID
-  const getUsersByUIDs = async () => {
-    try {
-      const usersCollection = firestore().collection('users');
-      const querySnapshot2 = await usersCollection
-        .where('uid', 'in', uniqueUsers)
-        .get();
+        // Get the last message from the array of users
+        const lastMessageFromOthers =
+          usersData.length > 0 ? usersData[0].lastMessage : null;
+        const IdFromOthers = usersData.length > 0 ? usersData[0].userId : null;
+        console.log(lastMessageFromOthers, IdFromOthers);
+        setUsers(usersData);
+      } else {
+        // Handle the case where no user documents exist in the collection
+        console.log('No user documents found.');
+      }
+    });
+    //console.log(' Yse ', userMessages);
+    return () => unsubscribe();
+  }, [currentUserid]);
 
-      const users = [];
-
-      querySnapshot2.forEach(doc => {
-        const user = doc.data();
-        users.push(user);
-      });
-
-      return users;
-    } catch (error) {
-      console.error('Error fetching users:', error.message);
-      throw error;
-    }
-  };
   //----------------------------------------------------------------
-  //----------------------------------------------------------------
-
-  const getMess = async () => {};
 
   return (
     <SafeAreaView style={styles.container}>
@@ -112,14 +89,14 @@ const Home = ({navigation}) => {
       <FlatList
         data={users}
         style={styles.Mlist}
-        keyExtractor={item => item.uid}
+        keyExtractor={item => item.receiver}
         renderItem={({item}) => (
           <TouchableOpacity
             onPress={() =>
               navigation.navigate('ChatScreen', {
                 user: {
-                  name: item.name,
-                  uid: item.uid,
+                  name: item.receiverName,
+                  uid: item.receiver,
                   currentUserid: currentUserid,
                 },
               })
@@ -127,8 +104,8 @@ const Home = ({navigation}) => {
             <View style={styles.card}>
               <Image style={[styles.userImageST]} source={ImagesPath.Users} />
               <View style={styles.txtArea}>
-                <Text style={styles.nameText}>{item.name}</Text>
-                {/* <Text style={styles.msgContent}>{item}</Text> */}
+                <Text style={styles.nameText}>{item.receiverName}</Text>
+                <Text style={styles.msgContent}>{item.lastMessage}</Text>
               </View>
             </View>
           </TouchableOpacity>

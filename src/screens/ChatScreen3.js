@@ -3,14 +3,16 @@ import React, {useEffect, useState, useCallback} from 'react';
 import {GiftedChat, Bubble, InputToolbar, Send} from 'react-native-gifted-chat';
 import firestore from '@react-native-firebase/firestore';
 import {useFocusEffect} from '@react-navigation/native';
-import { ImagesPath } from '../assets/ImagesPath';
+import {ImagesPath} from '../assets/ImagesPath';
 
 const CustomSendButton = props => {
   return (
-    <Send {...props} containerStyle={{justifyContent: 'center', marginHorizontal: 5}}>
+    <Send
+      {...props}
+      containerStyle={{justifyContent: 'center', marginHorizontal: 5}}>
       <Image
         source={ImagesPath.SendButton}
-        style={{alignSelf: 'center',height: 30, width: 30}}
+        style={{alignSelf: 'center', height: 30, width: 30}}
       />
     </Send>
   );
@@ -19,9 +21,9 @@ const CustomSendButton = props => {
 const ChatScreen3 = ({route, navigation}) => {
   const [messages, setMessages] = useState([]);
   //const [currentUserid, setCurrentUserid] = useState();
-  const {uid, currentUserid} = route.params.user;
+  const {uid, currentUserid, name} = route.params.user;
 
-  console.log('Current Params ' + uid, 'Current user ' + currentUserid);
+  console.log('Current Receiver ' + uid, 'Current user ' + currentUserid);
 
   const allMessages = async () => {
     const docid =
@@ -76,6 +78,11 @@ const ChatScreen3 = ({route, navigation}) => {
       .doc(chatid)
       .collection('thread')
       .add({...usermsg, createdAt: firestore.FieldValue.serverTimestamp()});
+
+    firestore()
+      .collection('messages')
+      .doc(chatid)
+      .set({lastMessage: msg});
   };
 
   return (
@@ -85,6 +92,8 @@ const ChatScreen3 = ({route, navigation}) => {
         onSend={text => onSend(text)}
         user={{
           _id: currentUserid,
+          sendto: uid,
+          sendtoName: name
         }}
         messagesContainerStyle={{paddingVertical: 5}}
         imageStyle={{margin: 5}}
@@ -113,7 +122,7 @@ const ChatScreen3 = ({route, navigation}) => {
                 paddingHorizontal: 10,
                 paddingTop: 3,
                 width: '90%',
-                marginHorizontal: '5%'
+                marginHorizontal: '5%',
               }}
               textInputStyle={{
                 fontSize: 15,
